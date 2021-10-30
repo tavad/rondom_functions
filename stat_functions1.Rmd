@@ -1,0 +1,240 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+author: "Asghasi Tavadyan"
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+
+norm_plot <- function(q_lower = NULL, q_upper = NULL, mean = 0, sd = 1){
+
+  # q_lower = if(!is.null(q_lower) & !is.null(q_upper)){
+  #   q_lower
+  # } else if (!is.null(q_lower)){
+  #   mean-4*sd
+  # } else {
+  #   q_upper
+  # }
+  # 
+  # q_upper = if(!is.null(q_lower) & !is.null(q_upper)){
+  #   q_upper
+  # } else if (!is.null(q_upper)){
+  #   mean+4*sd
+  # } else {
+  #   q_lower
+  # }
+  
+  # if (q_lower > q_upper) {
+  #   temp = q_upper
+  #   q_upper = q_lower
+  #   q_lower = temp
+  # } else {}
+  
+  
+    condition = if (is.null(q_lower)){
+    paste0("x ", intToUtf8(8804), " ", formatC(q_upper))
+  } else if (is.null(q_upper)){
+    paste0(formatC(q_lower), " ",intToUtf8(8805)," x")
+  } else {
+    paste0(formatC(q_lower), " ",intToUtf8(8804)," x ",
+           intToUtf8(8804)," ", formatC(q_upper))
+  }
+  
+  q_upper = ifelse(is.null(q_upper), mean + 5*sd, q_upper)
+  q_lower = ifelse(is.null(q_lower), mean - 5*sd, q_lower)
+  
+  prob = pnorm(q_upper, mean, sd) - pnorm(q_lower, mean, sd)
+  subtitle1 = paste0("P(", condition, " | μ = ", formatC(mean),
+                     ", ", intToUtf8(963)," = ",
+                     formatC(sd), ") = ", formatC(prob),
+                     "      OR: ", formatC(prob*100, digits = 4),"%")
+  
+  data <- data.frame(x = seq(mean-4*sd, mean+4*sd, length.out = 500)) %>% 
+    mutate(area_out = ifelse(x <= q_lower | x >= q_upper, dnorm(x, mean, sd), 0),
+           area_in = ifelse(x >= q_lower & x <= q_upper, dnorm(x, mean, sd), 0),
+           z = (x - mean)/sd) %>% 
+    pivot_longer(c(area_out, area_in), names_to = "area", values_to = "y")
+  
+  bounds = seq(mean-4*sd, mean+4*sd, length.out = 9)
+  
+  line_df <- data.frame(
+    x = mean + (-3:3)*sd,
+    y = 0,
+    xend = mean + (-3:3)*sd,
+    yend = dnorm(mean + (-3:3)*sd, mean, sd)
+  )
+  
+  ggplot(data, aes(x, y, fill = area)) +
+    scale_fill_manual(values = c(7,4)) +
+    geom_area(show.legend = F) +
+    geom_segment(
+      data = line_df, 
+      mapping = aes(x=x, y=y, xend=xend, yend=yend), 
+      inherit.aes = FALSE) +
+    scale_x_continuous(breaks = c(mean-4.3*sd, bounds, mean+4.3*sd),
+                       labels = paste0(c("X", formatC(bounds), "X"),
+                                       "\n", "\n", c("Z",-4:4, "Z"))) +
+    scale_y_continuous(position = "right") +
+    labs(y = "Likelhood \n ",
+         x = "",
+         title = "Normal (Gaussian) Distribution",
+         subtitle = subtitle1)+
+    theme(panel.background=element_blank(), 
+          panel.grid.major=element_blank(), 
+          panel.grid.minor=element_blank(), 
+          axis.ticks=element_blank())
+}
+
+```
+
+mu = 210/$
+sigma  = 15/$
+
+
+```{r}
+startTime = proc.time()
+
+norm_plot(164,178,171,7)
+
+stopTime = proc.time()
+print(stopTime - startTime)
+
+```
+
+```{r}
+prob_norm <- function(plot = 0, mean = 0, sd = 1,
+                      x1.1 = mean - 2*sd,
+                      x1.2 = mean + 0*sd,
+                      x2.1 = mean - 1*sd,
+                      x2.2 = mean + 1*sd){
+  
+  col1 = "darkgreen"
+  col2 = "red"
+  
+  lwd1 = ifelse(plot == 1 | plot>=3, 3 , NA)
+  lwd2 = ifelse(plot>=2, 3 , NA)
+  
+  data.frame(x = seq(mean-4*sd, mean+4*sd, length.out = 300)) %>% 
+    mutate(area0 = dnorm(x, mean, sd),
+           area1 = if_else(x>=x1.1 & x<=x1.2 & (plot == 1 | plot>=3), dnorm(x, mean, sd), 0),
+           area2 = if_else(x>=x2.1 & x<=x2.2 & plot >= 2, dnorm(x, mean, sd), 0),
+    ) %>% 
+    ggplot(aes(x, area0)) +
+    geom_area(alpha = 0.3, fill = "orange") +
+    geom_area(aes(x, area1), alpha = 0.4, fill = col1, lty = 2, col = col1, lwd = 3) +
+    geom_area(aes(x, area2), alpha = 0.3, fill = col2, lty = 3, col = col2, lwd = 3) +
+    scale_x_continuous(breaks = seq(mean-4*sd, mean+4*sd, length.out = 9)) +
+    labs(x = "Event Space",
+         y = "Likelihood")
+}
+
+
+
+
+prob_norm(3, 171, 7)
+
+
+# p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+# 
+# geom_segment(aes(x = x1.1, y = 0, xend = x1.1, yend = dnorm(x1.1, mean, sd)),
+#              lty = 2, col = col1, lwd = lwd1) +
+# geom_segment(aes(x = x1.1, y = 0, xend = x1.2, yend = 0),
+#              lty = 2, col = col1, lwd = lwd1, inherit.aes = FALSE) + 
+#   geom_segment(aes(x = x1.2, y = 0, xend = x1.2, yend = dnorm(x1.2, mean, sd)),
+#                lty = 2, col = col1, lwd = lwd1, inherit.aes = FALSE) +
+#   geom_segment(aes(x = x2.1, y = 0, xend = x2.1, yend = dnorm(x2.1, mean, sd)),
+#                lty = 3, col = col2, lwd = lwd2, inherit.aes = FALSE) +
+#   geom_segment(aes(x = x2.1, y = 0, xend = x2.2, yend = 0),
+#                lty = 3, col = col2, lwd = lwd2, inherit.aes = FALSE) +  
+#   geom_segment(aes(x = x2.2, y = 0, xend = x2.2, yend = dnorm(x2.2, mean, sd)),
+#                lty = 3, col = col2, lwd = lwd2, inherit.aes = FALSE) +
+```
+
+
+```{r}
+## q_lower and q_upper comditions are filipped here
+
+p2norm <- function(q_lower = NULL, q_upper = NULL, mean = 0, sd = 1){
+  if (is.null(q_upper)){
+    pnorm(q_lower, mean, sd)
+  } else if (is.null(q_lower)){
+    1 - pnorm(q_upper, mean, sd)
+  } else if (q_lower > q_upper){
+    pnorm(q_lower, mean, sd) - pnorm(q_upper, mean, sd)
+  } else {
+    pnorm(q_upper, mean, sd) - pnorm(q_lower, mean, sd)
+  }
+}
+
+
+
+p2norm(,1)
+```
+
+
+```{r}
+zar <- function(x = 6, w = NULL){
+
+  if(length(x) == 1){
+    n = x
+    x = 1:n
+  } else {
+    x = x
+    n = length(x)
+  }
+  
+  if(is.null(w)){
+    p = rep(1/n, n)
+    c = 1
+  } else {
+    p = w / sum(w)
+    if(sum(w) == 1){
+      c = 1
+    } else {
+      c = sum(w) / (sum(w)- 1)
+    }
+  }
+  
+  mean_x = sum(x*p)
+  var_x = (sum(x^2*p) - sum(x*p)^2)*c
+  sd_x = sqrt(var_x)
+  cv_x = sd_x / mean_x
+  
+  
+  median_x = data.frame(w = x, p = p, sumn = cumsum(p)) %>% 
+    filter(sumn >= sum(p)/2) %>% .[1,1] %>% as.double()
+  mode <- data.frame(x =x, p = p) %>% 
+    filter(p == max(p))
+  
+  if(mode %>% nrow() > 1){
+    mode_x = NA
+  }else{
+    mode_x = mode[1,1]
+  }
+  
+  
+  cat("mean is:", formatC(mean_x), "\n")
+  cat("median is:", formatC(median_x), "\n")
+  cat("mode is:", formatC(median_x), "\n")
+  cat("variance is:", formatC(var_x), "\n")
+  cat("standart deviation is:", formatC(sd_x), "\n")
+  cat("coefficient of variation is:", formatC(cv_x), "\n")
+  
+}
+
+zar(c(5,7,10,11,12), c(9,18,15,20,8))
+
+x = 1:6
+p = c(1,2,3,4,5,6)
+
+
+
+
+```
+
+

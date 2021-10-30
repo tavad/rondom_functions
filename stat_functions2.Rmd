@@ -1,0 +1,104 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+
+
+```
+
+## binom_plot function
+
+```{r}
+binom_plot <- function(size = 1, prob = 0.5, heads = NULL, tails = NULL){
+  
+  i = ceiling(size/16)
+  j = round(size*prob) %% i
+  
+  if (!is.null(heads) | !is.null(tails)) {
+    ivent_space = formatC(seq(0 + j,size,i)*heads + (size-seq(0 + j,size,i))*tails)
+    labels0 = paste0(seq(0 + j,size,i), "\n", "\n", ivent_space)
+    outcome = size*(prob*heads+(1-prob)*tails)
+    subtitle0 = paste0("Mean is ", size*prob, " ,with the expected outcome of ", outcome)
+  } else {
+    labels0 = paste0(seq(0 + j,size,i))
+    subtitle0 = paste0("Mean is ", size*prob)
+  }
+  
+  data.frame(x = 0:size, 
+             PMF = dbinom(0:size, size, prob),
+             CDF = pbinom(0:size, size, prob)
+  ) %>% 
+    pivot_longer(PMF:CDF, names_to = "curves", values_to = "probabilities") %>% 
+    mutate(curves = factor(curves, levels = c("PMF", "CDF"))) %>% 
+    ggplot(aes(x = x, y = probabilities, fill = curves)) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ curves, scales = "free_y") +
+    scale_x_continuous(breaks = seq(0 + j, size, i),
+                       labels = labels0) +
+    labs(y = "Probability",
+         x = "",
+         title = paste0(ifelse(size == 1, "Bernoulli", "Binominal")," Distribution with ",
+                        size, " tries and ", prob," probability"),
+         subtitle = subtitle0)
+}
+
+
+binom_plot(10, 0.5, heads = 20, tails = -10)
+
+30*(1-0.65)
+
+library(tidyverse)
+
+
+pbinom(3,10,0.5)
+
+
+```
+
+
+$$
+PMF: f_y(y)=p^y(1-p)^{(1-y)}\\
+CDF: 
+
+$$
+
+## Sample coin N times
+
+```{r}
+data.frame(x = 1:1000,
+           y = cummean(sample(0:1, 1000, replace = T))) %>% 
+  ggplot(aes(x,y)) +
+  geom_line(lwd = 1) +
+  geom_hline(yintercept = 0.5,  col = 2, lwd = 2, alpha = 0.5) +
+  labs(x = "Trials (n)",
+       y = "Expected Value",
+       title = "Expecded Value of Random n Coin Flips") +
+  expand_limits(y = c(1,0))
+```
+
+## smaple & population variation test: TEST
+
+```{r}
+sd_test = data.frame(x = 1:1000, sd_s = 1:1000, sd_p = 1:1000)
+
+for(i in 1:1000){
+  sd_test[i, 2] = sd(rnorm(i,0,1))
+  sd_test[i, 3] = sd(rnorm(i,0,1))*sqrt((i-1)/i)
+}
+
+sd_test %>% 
+  pivot_longer(sd_s:sd_p) %>% 
+  ggplot(aes(x, value, col = name)) +
+  geom_line()+
+  # scale_x_log10() +
+  geom_hline(yintercept = 1)
+```
+
+
+
+
+

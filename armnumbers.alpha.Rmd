@@ -1,0 +1,63 @@
+---
+title: ""
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# ԱԿՏ
+## Հանձման-ընդունման
+
+ք. Երևան
+ԴԱՏ
+
+Սույն ԱԿՏ-ը կազմված է առ այն, որ "Կոնվերտ" ՍՊԸ-ն 1111111111թ. մինչև 1111111111 մատուցել է տվյալների վերլուծության և մոդելավրման ծառայություն 111111111111
+
+
+
+```{r cars}
+
+armenian.numbers <- function(number){
+  x = formatC(round(number), flag = "0", format = "fg", width = 9)
+
+  names = data.frame(
+    lavel1 = c("մեկ ","երկու ","երեք ","չորս ","հինգ ","վեց ","յոթ ","ութ ","ինը ", " "),
+    level2 = c("տասն","քսան","երեսուն","քառասուն","հիսուն","վաթսուն","յոթանասուն","ութսուն","իննսուն", ""),
+    level3 = c("մեկ ","երկու ","երեք ","չորս ","հինգ ","վեց ","յոթ ","ութ ","ինը ", " ")
+  )
+  names2 = c("հարյուր ","","միլիոն ","հարյուր ","","հազար ","հարյուր ","","")
+
+  n = c()
+  for (i in 1:9) {
+    row.n = substr(x,i,i)
+    m = cat(names[ifelse(row.n==0,10,row.n),ifelse(i%%3==0,3,i%%3)],
+            ifelse(number%/%(10^(3*(i-1)%/%3+1)) # N==0
+                   # |  (row.n!="0" & i%%3!=0)
+                   ,names2[i],""), sep = "")
+    n = c(n,m)
+  }
+
+  # zz = gsub("տասն$|տասն\s","տասը",cat(n,sep = ""), perl = TRUE, fixed = TRUE)
+  # cat(zz,"\n",sep = "")
+  cat(n,sep = "")
+
+}
+
+armenian.numbers(123456789)
+
+
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
