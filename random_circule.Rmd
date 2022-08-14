@@ -1,0 +1,51 @@
+---
+title: "random_circule"
+author: "Aghasi Tavadyan"
+date: '2022-08-14'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggthemes)
+```
+
+
+```{r}
+jitter = 7
+set.seed(1234)
+
+tibble(y = rep(0:10, (0:10) * 6 + 1)) %>% 
+  group_by(y) %>% 
+  mutate(
+    n = row_number() - 1,
+    x = n / (y * 6) * pi,
+    x = ifelse(is.na(x), 0, x)
+    ) %>% 
+  ungroup() %>%
+  mutate(row_number = row_number()) %>% 
+  group_by(row_number) %>% 
+  mutate(
+    y_random = ifelse(
+      x < pi/2 & x > 0,
+      y + rnorm(1) / jitter,
+      y
+    ),
+    x_random = ifelse(
+      x < pi/2 & x > 0,
+      x + rnorm(1) / jitter^2,
+      x
+    ),
+    y = as.factor(y)
+  ) %>%
+  ggplot(aes(x_random, y_random, color = y, group = y)) +
+  geom_point(size = 5) +
+  coord_polar() +
+  theme_map() +
+  theme(legend.position = "drop")
+```
+
