@@ -1,7 +1,7 @@
 ---
 title: "random_circule"
 author: "Aghasi Tavadyan"
-date: '2022-08-14'
+date: '2022-08-15'
 output: html_document
 ---
 
@@ -14,16 +14,18 @@ library(tidyverse)
 library(ggthemes)
 ```
 
-
 ```{r}
-jitter = 7
+dencity = 6
+rings = 10
+jitter = 1/7
 set.seed(1234)
 
-tibble(y = rep(0:10, (0:10) * 6 + 1)) %>% 
+
+tibble(y = rep(0:rings, (0:rings) * dencity + 1)) %>% 
   group_by(y) %>% 
   mutate(
     n = row_number() - 1,
-    x = n / (y * 6) * pi,
+    x = pi * n / (y * dencity),
     x = ifelse(is.na(x), 0, x)
     ) %>% 
   ungroup() %>%
@@ -32,12 +34,12 @@ tibble(y = rep(0:10, (0:10) * 6 + 1)) %>%
   mutate(
     y_random = ifelse(
       x < pi/2 & x > 0,
-      y + rnorm(1) / jitter,
+      y + rnorm(1, 0, jitter),
       y
     ),
     x_random = ifelse(
       x < pi/2 & x > 0,
-      x + rnorm(1) / jitter^2,
+      x + rnorm(1, 0, jitter^2),
       x
     ),
     y = as.factor(y)
